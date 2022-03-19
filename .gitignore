@@ -3,6 +3,7 @@
 test-data/
 *.bmp
 build*/
+server-content/
 
 # in case of in-place configuration
 *.sln
