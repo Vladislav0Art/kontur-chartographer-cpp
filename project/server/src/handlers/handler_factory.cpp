@@ -39,7 +39,7 @@ Poco::Net::HTTPRequestHandler* HandlerFactory::createRequestHandler(const HTTPSe
 		else if(request.getMethod() == "POST")
 			return new SaveCanvasFragmentHandler{ uri };			
 		else if(request.getMethod() == "DELETE")
-			return new DeleteCanvasHandler{ uri };
+			return new DeleteCanvasHandler(uri, working_folder);
 	}
 
 	return new NotFoundHandler{};
