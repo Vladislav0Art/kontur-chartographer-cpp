@@ -1,6 +1,7 @@
 .vscode/
 .vs/
-
+test-data/
+*.bmp
 build*/
 
 # in case of in-place configuration
