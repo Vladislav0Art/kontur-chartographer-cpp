@@ -1,4 +1,5 @@
-﻿// catch2
+﻿#include <iostream>
+// catch2
 #include "catch2/catch.hpp"
 // charta
 #include "charta/hello.h"
@@ -9,6 +10,12 @@ using namespace charta;
 
 
 TEST_CASE("Creating empty bmp image") {
-	CanvasManager::createNewCanvas(100, 120, "./test.bmp");
-	// CanvasManager::deleteCanvas("./test.bmp");
+	try {
+		// CanvasManager manager("./test-folder");
+		// manager.createNewCanvas(100, 120, "test.bmp");
+		// manager.deleteCanvas("test.bmp");
+	}
+	catch(std::exception& err) {
+		std::cout << err.what() << std::endl;
+	}
 }
