@@ -1,3 +1,6 @@
+// core
+#include "charta/exceptions.h"
+#include "charta/canvas_manager.h"
 // handlers
 #include "handlers/create_canvas_handler.h"
 // poco
@@ -32,16 +35,20 @@ void CreateCanvasHandler::handleRequest(HTTPServerRequest& request, HTTPServerRe
 	auto width = GetDefaultedQueryValue(uri_.getQueryParameters(), "width", "-1");
 	auto height = GetDefaultedQueryValue(uri_.getQueryParameters(), "height", "-1");
 
-	// validating provided width and height
-	// ... 
+	try {
+		// generating uuid for bmp image
+		Poco::UUIDGenerator generator;
+		Poco::UUID uuid = generator.createRandom();
 
-	// generating uuid for bmp image
-	Poco::UUIDGenerator generator;
-	Poco::UUID uuid = generator.createRandom();
-
-	response.setStatusAndReason(HTTPServerResponse::HTTP_CREATED);
-	response.setContentType("text/plain");
-	response.send() << "width: " + width << "\n" 
-					<< "height: " + height << "\n" 
-					<< "uuid: " << uuid.toString();
+		CanvasManager manager(working_folder);
+		manager.createNewCanvas(std::stoi(width), std::stoi(height), uuid.toString() + ".bmp");
+		
+		response.setStatusAndReason(HTTPServerResponse::HTTP_CREATED);
+		response.setContentType("text/plain");
+		response.send() << "uuid: " << uuid.toString();
+	}
+	catch(const ChartaException& err) {
+		response.setStatusAndReason(HTTPServerResponse::HTTP_BAD_REQUEST);
+		response.send() << err.what();
+	}
 }
