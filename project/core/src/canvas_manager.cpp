@@ -14,7 +14,7 @@
 
 namespace charta {
 	
-void CanvasManager::createNewCanvas(const int width, const int height, const std::string& filepath) {
+void CanvasManager::createNewCanvas(const int width, const int height, const std::string& filename) {
 	if(width <= 0 || width > CanvasManager::MaxWidth) {
 		throw InvalidWidthException(width);
 	}
@@ -25,6 +25,8 @@ void CanvasManager::createNewCanvas(const int width, const int height, const std
 
 	std::vector<std::uint8_t> canvas(width * height * CanvasManager::RequiredBitCount);
 
+	std::string filepath = m_working_folder.string() + filename;
+	std::cout << filepath << std::endl;
 	const int status = stbi_write_bmp(filepath.c_str(), width, height, CanvasManager::Channels, canvas.data());
 
 	if(!status) {
@@ -36,7 +38,8 @@ void CanvasManager::createNewCanvas(const int width, const int height, const std
 }
 
 
-void CanvasManager::deleteCanvas(const std::string& filepath) {
+void CanvasManager::deleteCanvas(const std::string& filename) {
+	std::string filepath = m_working_folder.string() + filename;
 	if(remove(filepath.c_str()) != 0) {
 		throw FileDeletionFailure();
 	}

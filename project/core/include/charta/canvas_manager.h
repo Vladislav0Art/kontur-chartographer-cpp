@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <filesystem>
 
 namespace charta {
 	
@@ -9,10 +10,14 @@ struct CanvasManager {
 	// 3. save restored fragment of image
 	// 4. return restore fragment of image
 
-	static void createNewCanvas(int width, int height, const std::string& filepath);
-	static void deleteCanvas(const std::string& filepath);
+	CanvasManager(std::filesystem::path working_folder_) 
+		: m_working_folder(working_folder_.string() + "/") {}
+
+	void createNewCanvas(int width, int height, const std::string& filepath);
+	void deleteCanvas(const std::string& filepath);
 
 private:
+	const std::filesystem::path m_working_folder;
 
 	// static members
 	inline static const int MaxWidth = 20'000;
