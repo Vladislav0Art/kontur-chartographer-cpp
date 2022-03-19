@@ -30,7 +30,7 @@ void ChartographerApplication::initialize(Application& app)
 int ChartographerApplication::main(const std::vector<std::string>& args)
 {
 	ServerSocket socket{ 8080 };
-	HTTPServer server{ new HandlerFactory{}, socket, new HTTPServerParams{} };
+	HTTPServer server{ new HandlerFactory(working_folder_), socket, new HTTPServerParams{} };
 	server.start();
 	waitForTerminationRequest();
 	server.stop();

@@ -30,7 +30,7 @@ Poco::Net::HTTPRequestHandler* HandlerFactory::createRequestHandler(const HTTPSe
 	}
 	else if(uri.getPath() == "/chartas" && request.getMethod() == "POST")
 	{
-		return new CreateCanvasHandler{ uri };
+		return new CreateCanvasHandler(uri, working_folder);
 	}
 	else if(pathSegments.size() == 2 && pathSegments[0] == "chartas")
 	{
