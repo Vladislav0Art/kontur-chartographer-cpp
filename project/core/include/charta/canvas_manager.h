@@ -56,6 +56,8 @@ struct CanvasManager {
 	void createNewCanvas(int width, int height, const std::string& filepath);
 	void deleteCanvas(const std::string& filepath);
 
+	void saveCanvasFragment(const std::string& filename, std::istream& stream, int x_px, int y_px, int w_px, int h_px);
+
 	BMPImageData readBMPFileFromStream(std::istream &stream);
 	BMPImageData readBMPFileFromFileSystem(const std::string& filename);
 
