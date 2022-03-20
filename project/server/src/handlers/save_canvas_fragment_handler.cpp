@@ -29,8 +29,9 @@ namespace
 				std::cout << itr->first << " " << itr->second << std::endl;
 			}
 			if(stream) {
-				CanvasManager manager("./");
-				manager.read(stream);
+				CanvasManager manager("./server-content");
+				// manager.readBMPFileFromStream(stream);
+				// manager.readBMPFileFromFileSystem("960eaee0-cfad-4773-adde-736244097a1a.bmp");
 
 				// std::vector<std::uint8_t> data;
 				// std::uint8_t byte;
