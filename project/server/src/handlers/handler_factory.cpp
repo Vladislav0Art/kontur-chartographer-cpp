@@ -35,7 +35,7 @@ Poco::Net::HTTPRequestHandler* HandlerFactory::createRequestHandler(const HTTPSe
 	else if(pathSegments.size() == 2 && pathSegments[0] == "chartas")
 	{
 		if(request.getMethod() == "GET")
-			return new GetCanvasFragmentHandler{ uri };
+			return new GetCanvasFragmentHandler(uri, working_folder);
 		else if(request.getMethod() == "POST")
 			return new SaveCanvasFragmentHandler(uri, working_folder);			
 		else if(request.getMethod() == "DELETE")

@@ -1,3 +1,8 @@
+#include <stdio.h>
+#include <stdlib.h>
+// charta
+#include "charta/exceptions.h"
+#include "charta/canvas_manager.h"
 // handlers
 #include "handlers/get_canvas_fragment_handler.h"
 // poco
@@ -5,6 +10,10 @@
 #include "Poco/Net/HTTPServerRequest.h"
 #include "Poco/URI.h"
 #include <iomanip>
+// stb
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+#include "stb_image_write.h"
 
 using namespace charta;
 using namespace Poco::Net;
@@ -27,7 +36,61 @@ namespace
 
 void GetCanvasFragmentHandler::handleRequest(HTTPServerRequest& request, HTTPServerResponse& response)
 {
-	response.setStatusAndReason(HTTPServerResponse::HTTP_OK);
-	response.setContentType("text/plain");
-	response.send() << "Hello from 'get canvas'";
+	const auto width = GetDefaultedQueryValue(uri_.getQueryParameters(), "width", "");
+	const auto height = GetDefaultedQueryValue(uri_.getQueryParameters(), "height", "");
+	const auto x = GetDefaultedQueryValue(uri_.getQueryParameters(), "x", "");
+	const auto y = GetDefaultedQueryValue(uri_.getQueryParameters(), "y", "");
+
+	try {
+		if(width.empty()) {
+			throw UnprovidedParameterExpection("width");
+		}
+
+		if(height.empty()) {
+			throw UnprovidedParameterExpection("height");
+		}
+
+		if(x.empty()) {
+			throw UnprovidedParameterExpection("x");
+		}
+
+		if(y.empty()) {
+			throw UnprovidedParameterExpection("y");
+		}
+
+		std::vector<std::string> segments;
+		uri_.getPathSegments(segments);
+
+		std::string uuid = segments[1];
+
+
+		/*
+		const std::string filepath = working_folder.string() + "/" + uuid + ".bmp";
+
+		std::ifstream file(filepath, std::fstream::out | std::fstream::binary);
+		
+		if(!file.is_open()) {
+			throw FileOpeningFailure();
+		}
+		std::vector<std::uint8_t> data;
+		std::uint8_t byte;
+
+		while(file >> byte) {
+			data.push_back(byte);
+		}
+		*/
+
+		CanvasManager manager(working_folder);
+
+		std::vector<std::uint8_t> data = manager.getCanvasFragment(uuid + ".bmp", std::stoi(x), std::stoi(y), std::stoi(width), std::stoi(height));
+
+		response.setStatusAndReason(HTTPServerResponse::HTTP_OK);
+		response.setContentType("image/bmp");
+		response.sendBuffer(data.data(), data.size());
+	}
+	catch(const ChartaException& err) {
+		response.setStatusAndReason(HTTPServerResponse::HTTP_BAD_REQUEST);
+		response.send() << err.what();
+	}
+
 }

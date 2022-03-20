@@ -135,20 +135,18 @@ void CanvasManager::saveCanvasFragment(const std::string& filename, std::istream
 std::vector<std::uint8_t> CanvasManager::getCanvasFragment(const std::string filename, int x_px, int y_px, int w_px, int h_px) {
 	BMPImageData canvas = this->readBMPFileFromFileSystem(filename);
 	
-	const int bytes_in_px = 3;
-    
-	// canvas
-	const int bytes_in_row = canvas.info_header.width * bytes_in_px;
-    const int canvas_padding = (4 - bytes_in_row % 4) % 4;
+    const auto bytes_in_px = CanvasManager::Channels;
+    const auto bytes_in_row = canvas.info_header.width * bytes_in_px;
 
-	// fragment
-    const int fragment_padding = (4 - w_px * bytes_in_px % 4) % 4;
-    const int fragment_size_bytes = (w_px * bytes_in_px + fragment_padding) * h_px;
+    const auto prev_padding = (4 - bytes_in_row % 4) % 4;
+
+    const auto new_padding_bytes = (4 - w_px * bytes_in_px % 4) % 4;
+    const auto size_bytes = (w_px * bytes_in_px + new_padding_bytes) * h_px;
 
     std::vector<std::uint8_t> fragment_data;
-    fragment_data.reserve(fragment_size_bytes);
+    fragment_data.reserve(size_bytes);
 
-    const int w_bytes = w_px * bytes_in_px;
+    const auto w_bytes = w_px * bytes_in_px;
 
     // if (!(0 <= x_px && x_px < x_px + w_px &&
     //       x_px + w_px <= bmp_info_header.width) ||
@@ -157,17 +155,15 @@ std::vector<std::uint8_t> CanvasManager::getCanvasFragment(const std::string fil
     //     throw cropping_bounds_exception();
     // }
 
-	std::cout << x_px << " " << y_px << std::endl;
+    for (auto line_px = h_px; line_px > 0; line_px--) {
+        const auto pos = (canvas.info_header.height - y_px - line_px) *
+                        (bytes_in_row + prev_padding) + x_px * bytes_in_px;
 
-    for (int line_px = h_px; line_px > 0; line_px--) {
-        const int pos = (canvas.info_header.height - y_px - line_px) *
-                    	(bytes_in_row + canvas_padding) + x_px * bytes_in_px;
-
-        for (int i = pos; i < pos + w_bytes; i++) {
+        for (auto i = pos; i < pos + w_bytes; i++) {
             fragment_data.push_back(canvas.data[i]);
         }
 
-        for (int i = 0; i < fragment_padding; i++) {
+        for (auto i = 0; i < new_padding_bytes; i++) {
             fragment_data.push_back(0);
         }
     }

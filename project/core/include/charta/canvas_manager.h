@@ -43,6 +43,15 @@ struct BMPImageData {
 	std::vector<std::uint8_t> data;
 };
 
+
+struct BMPImage {
+  int width = 0;
+  int height = 0;
+  int size = 0;
+  std::vector<uint8_t> data;
+};
+
+
 struct CanvasManager {
 	// 1. create image and return its uuid
 	// 2. delete image by uuid
@@ -54,11 +63,15 @@ struct CanvasManager {
 		: m_working_folder(working_folder_.string() + "/") {}
 
 	void createNewCanvas(int width, int height, const std::string& filepath);
+	
 	void deleteCanvas(const std::string& filepath);
 
 	void saveCanvasFragment(const std::string& filename, std::istream& stream, int x_px, int y_px, int w_px, int h_px);
 
+	std::vector<std::uint8_t> getCanvasFragment(const std::string filename, int x_px, int y_px, int w_px, int h_px);
+
 	BMPImageData readBMPFileFromStream(std::istream &stream);
+	
 	BMPImageData readBMPFileFromFileSystem(const std::string& filename);
 
 private:
