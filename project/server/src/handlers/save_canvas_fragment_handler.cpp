@@ -30,6 +30,7 @@ namespace
 			}
 			if(stream) {
 				CanvasManager manager("./server-content");
+				manager.saveCanvasFragment("a8ba67eb-be69-40cd-9a21-7c7900556173.bmp", stream, -1, 9, 3, 2);
 				// manager.readBMPFileFromStream(stream);
 				// manager.readBMPFileFromFileSystem("960eaee0-cfad-4773-adde-736244097a1a.bmp");
 
