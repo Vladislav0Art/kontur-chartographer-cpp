@@ -30,7 +30,7 @@ void CanvasManager::createNewCanvas(const int width, const int height, const std
 	std::vector<std::uint8_t> canvas(width * height * CanvasManager::RequiredBitCount);
 
 	std::string filepath = m_working_folder.string() + filename;
-	std::cout << filepath << std::endl;
+	//std::cout << filepath << std::endl;
 	// TODO: if m_working_folder does not exist stb will not create bmp file
 	const int status = stbi_write_bmp(filepath.c_str(), width, height, CanvasManager::Channels, canvas.data());
 
@@ -38,8 +38,8 @@ void CanvasManager::createNewCanvas(const int width, const int height, const std
 		throw FileCreationFailure();
 	}
 
-	std::cout << "File created successfully!" << std::endl 
-			  << "Filepath:" << filepath << std::endl;
+	// std::cout << "File created successfully!" << std::endl 
+	// 		  << "Filepath:" << filepath << std::endl;
 }
 
 
@@ -81,8 +81,8 @@ void CanvasManager::saveCanvasFragment(const std::string& filename, std::istream
 	const int fragment_bytes_in_row = fragment.info_header.width * bytes_in_px;
 	const int fragment_padding = (4 - fragment_bytes_in_row % 4) % 4;
 	
-	std::cout << "frag width: " << fragment.info_header.width << "; frag height: " << fragment.info_header.height << std::endl;
-	std::cout << "frag padding: " << fragment_padding << std::endl;
+	// std::cout << "frag width: " << fragment.info_header.width << "; frag height: " << fragment.info_header.height << std::endl;
+	// std::cout << "frag padding: " << fragment_padding << std::endl;
 
 	int fragment_x_offset_px = 0;
 	int fragment_y_offset_px = 0;
@@ -107,7 +107,7 @@ void CanvasManager::saveCanvasFragment(const std::string& filename, std::istream
 		h_px = canvas.info_header.height - y_px;
 	}
 
-	std::cout << fragment_x_offset_px << " " << fragment_y_offset_px << std::endl;
+	// std::cout << fragment_x_offset_px << " " << fragment_y_offset_px << std::endl;
 
 	const int w_bytes = w_px * bytes_in_px;
 
@@ -119,12 +119,12 @@ void CanvasManager::saveCanvasFragment(const std::string& filename, std::istream
 		const int fragment_pos = (fragment.info_header.height - fragment_y_offset_px - line_px) * 
 								 (fragment_bytes_in_row + fragment_padding) + fragment_x_offset_px * bytes_in_px;
 
-		std::cout << "row: " << h_px - line_px << " " << w_bytes << std::endl;
+		// std::cout << "row: " << h_px - line_px << " " << w_bytes << std::endl;
         for (int i = canvas_pos, j = fragment_pos; i < canvas_pos + w_bytes; i++, j++) {
-			std::cout << j << " ";
+			// std::cout << j << " ";
 			canvas.data[i] = fragment.data[j];
         }
-		std::cout << std::endl;
+		// std::cout << std::endl;
     }
 
 	// saving updated file
@@ -193,8 +193,8 @@ std::vector<std::uint8_t> CanvasManager::getCanvasFragment(const std::string fil
 		result.push_back(byte);
 	}
 	
-	std::cout << "canvas size: " << canvas_size << std::endl;
-	std::cout << size << " " << result.size() << std::endl;
+	// std::cout << "canvas size: " << canvas_size << std::endl;
+	// std::cout << size << " " << result.size() << std::endl;
 	return result;
 }
 
