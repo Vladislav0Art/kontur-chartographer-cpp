@@ -23,4 +23,17 @@ FileCreationFailure::FileCreationFailure()
 FileDeletionFailure::FileDeletionFailure()
 	: ChartaException("Unable to delete bmp file") {}
 
+FileOpeningFailure::FileOpeningFailure() 
+	: ChartaException("Unable to open bmp file") {}
+
+NonIntersectingFragmentException::NonIntersectingFragmentException() 
+	: ChartaException("Provided fragment does not intersect canvas") {}
+
+BMPImageMetaInfoMismatch::BMPImageMetaInfoMismatch() 
+	: ChartaException("Meta data of provided bmp image does not match with supported one") {}
+
+
+UnprovidedParameterExpection::UnprovidedParameterExpection(std::string param) 
+	: ChartaException("Required query parameter is not provided: " + param) {}
+
 } // namespace charta

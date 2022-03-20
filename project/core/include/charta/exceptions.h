@@ -26,4 +26,21 @@ struct FileDeletionFailure : ChartaException {
 	explicit FileDeletionFailure();
 };
 
+struct FileOpeningFailure : ChartaException {
+	explicit FileOpeningFailure();
+};
+
+struct NonIntersectingFragmentException : ChartaException {
+	explicit NonIntersectingFragmentException();
+};
+
+struct BMPImageMetaInfoMismatch : ChartaException {
+	explicit BMPImageMetaInfoMismatch();
+};
+
+struct UnprovidedParameterExpection : ChartaException {
+	explicit UnprovidedParameterExpection(std::string param);
+};
+
+
 } // namespace charta
