@@ -1,4 +1,6 @@
-﻿#include "chartographer_application.h"
+﻿#include <filesystem>
+#include <string>
+#include "chartographer_application.h"
 #include "handlers/handler_factory.h"
 #include "Poco/Net/HTTPServer.h"
 #include "Poco/Util/OptionSet.h"
@@ -41,5 +43,6 @@ int ChartographerApplication::main(const std::vector<std::string>& args)
 void ChartographerApplication::handle_working_folder(const std::string& name, const std::string& value)
 {
 	working_folder_ = value;
+	std::filesystem::create_directories(working_folder_);
 }
 

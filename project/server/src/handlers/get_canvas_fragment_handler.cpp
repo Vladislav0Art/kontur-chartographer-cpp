@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
 // charta
 #include "charta/exceptions.h"
 #include "charta/canvas_manager.h"
@@ -63,23 +64,6 @@ void GetCanvasFragmentHandler::handleRequest(HTTPServerRequest& request, HTTPSer
 
 		std::string uuid = segments[1];
 
-
-		/*
-		const std::string filepath = working_folder.string() + "/" + uuid + ".bmp";
-
-		std::ifstream file(filepath, std::fstream::out | std::fstream::binary);
-		
-		if(!file.is_open()) {
-			throw FileOpeningFailure();
-		}
-		std::vector<std::uint8_t> data;
-		std::uint8_t byte;
-
-		while(file >> byte) {
-			data.push_back(byte);
-		}
-		*/
-
 		CanvasManager manager(working_folder);
 
 		std::vector<std::uint8_t> data = manager.getCanvasFragment(uuid + ".bmp", std::stoi(x), std::stoi(y), std::stoi(width), std::stoi(height));
@@ -90,7 +74,8 @@ void GetCanvasFragmentHandler::handleRequest(HTTPServerRequest& request, HTTPSer
 	}
 	catch(const ChartaException& err) {
 		response.setStatusAndReason(HTTPServerResponse::HTTP_BAD_REQUEST);
-		response.send() << err.what();
+		std::cout << err.what() << std::endl;
+		response.send();
 	}
 
 }

@@ -45,7 +45,7 @@ void CreateCanvasHandler::handleRequest(HTTPServerRequest& request, HTTPServerRe
 		
 		response.setStatusAndReason(HTTPServerResponse::HTTP_CREATED);
 		response.setContentType("text/plain");
-		response.send() << "uuid: " << uuid.toString();
+		response.send() << uuid.toString();
 	}
 	catch(const ChartaException& err) {
 		response.setStatusAndReason(HTTPServerResponse::HTTP_BAD_REQUEST);
