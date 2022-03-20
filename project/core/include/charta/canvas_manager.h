@@ -63,6 +63,7 @@ struct CanvasManager {
 
 private:
 	BMPImageData read(std::istream& binary_stream);
+	void save(const std::string& filename, BMPImageData& image_data);
 
 	const std::filesystem::path m_working_folder;
 
