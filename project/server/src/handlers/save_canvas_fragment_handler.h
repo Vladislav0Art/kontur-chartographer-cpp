@@ -8,10 +8,11 @@ namespace charta
 	{
 	private:
 		Poco::URI uri_;
+		std::filesystem::path working_folder;
 
 	public:
-		SaveCanvasFragmentHandler(Poco::URI uri) : uri_{ std::move(uri) }
-		{}
+		SaveCanvasFragmentHandler(Poco::URI uri, std::filesystem::path working_folder_) 
+			: uri_{ std::move(uri) }, working_folder(working_folder_) {}
 
 		void handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) override;
 	};

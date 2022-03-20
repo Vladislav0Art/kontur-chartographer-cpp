@@ -3,6 +3,7 @@
 #include <fstream>
 // charta
 #include "charta/canvas_manager.h"
+#include "charta/exceptions.h"
 // handlers
 #include "handlers/save_canvas_fragment_handler.h"
 // poco
@@ -21,42 +22,6 @@ using namespace Poco::Net;
 namespace
 {
 
-	struct FilePartHandler : PartHandler {
-		void handlePart(const MessageHeader &header, std::istream &stream) override {
-			// auto contentLength = header.get("Content-Length", "-");
-			// std::cout << contentLength << std::endl;
-			for(auto itr = header.begin(); itr != header.end(); itr++) {
-				std::cout << itr->first << " " << itr->second << std::endl;
-			}
-			if(stream) {
-				CanvasManager manager("./server-content");
-				manager.saveCanvasFragment("a8ba67eb-be69-40cd-9a21-7c7900556173.bmp", stream, -1, 9, 3, 2);
-				// manager.readBMPFileFromStream(stream);
-				// manager.readBMPFileFromFileSystem("960eaee0-cfad-4773-adde-736244097a1a.bmp");
-
-				// std::vector<std::uint8_t> data;
-				// std::uint8_t byte;
-				
-				// while(stream >> byte) {
-				// 	data.push_back(byte);
-				// }
-
-				/*
-				std::cout << "size: " << data.size() << std::endl;
-				for(auto byte : data) {
-					std::cout << byte << " ";
-				}
-				std::cout << std::endl;
-				*/
-
-				// creating file on disk
-				//std::ofstream file("./test.bmp", std::ofstream::out | std::ofstream::binary);
-				//file.write(reinterpret_cast<char *>(data.data()), static_cast<std::streamsize>(data.size()));
-			}
-		}
-	};
-
-
 	std::string GetDefaultedQueryValue(Poco::URI::QueryParameters query, std::string_view needle, std::string_view default_value)
 	{
 		for (const auto& [key, value] : query)
@@ -69,14 +34,66 @@ namespace
 
 		return std::string{ default_value };
 	}
+
+	struct FilePartHandler : PartHandler {
+		FilePartHandler(std::filesystem::path working_folder_, Poco::URI uri_) 
+			: PartHandler(), working_folder(working_folder_), uri(uri_) {}
+
+		void handlePart(const MessageHeader &header, std::istream &stream) override {
+			const auto width = GetDefaultedQueryValue(uri.getQueryParameters(), "width", "");
+			const auto height = GetDefaultedQueryValue(uri.getQueryParameters(), "height", "");
+			const auto x = GetDefaultedQueryValue(uri.getQueryParameters(), "x", "");
+			const auto y = GetDefaultedQueryValue(uri.getQueryParameters(), "y", "");
+
+			if(width.empty()) {
+				throw UnprovidedParameterExpection("width");
+			}
+
+			if(height.empty()) {
+				throw UnprovidedParameterExpection("height");
+			}
+
+			if(x.empty()) {
+				throw UnprovidedParameterExpection("x");
+			}
+
+			if(y.empty()) {
+				throw UnprovidedParameterExpection("y");
+			}
+
+			std::vector<std::string> segments;
+			uri.getPathSegments(segments);
+
+			CanvasManager manager(working_folder);
+			manager.saveCanvasFragment(segments[1] + ".bmp", stream, std::stoi(x), std::stoi(y), std::stoi(width), std::stoi(height));
+		}
+
+	private:
+		std::filesystem::path working_folder;
+		Poco::URI uri;
+	};
 }
 
 void SaveCanvasFragmentHandler::handleRequest(HTTPServerRequest& request, HTTPServerResponse& response)
 {
-	FilePartHandler handler;
-	HTMLForm form(request, request.stream(), handler);
+	try {
+		FilePartHandler handler(working_folder, uri_);
+		HTMLForm form(request, request.stream(), handler);
 
-	response.setStatusAndReason(HTTPServerResponse::HTTP_OK);
-	response.setContentType("text/plain");
-	response.send() << "Hello from 'save canvas'";
+		response.setStatusAndReason(HTTPServerResponse::HTTP_OK);
+	}
+	catch(const FileOpeningFailure& err) {
+		std::cout << err.what() << std::endl;
+		response.setStatusAndReason(HTTPServerResponse::HTTP_NOT_FOUND);
+	}
+	catch(const ChartaException& err) {
+		std::cout << err.what() << std::endl;
+		response.setStatusAndReason(HTTPServerResponse::HTTP_BAD_REQUEST);
+	}
+	catch(const std::exception& err) {
+		std::cout << err.what() << std::endl;
+		response.setStatusAndReason(HTTPServerResponse::HTTP_INTERNAL_SERVER_ERROR);
+	}
+
+	response.send();
 }
