@@ -2,6 +2,8 @@
 #include <string>
 #include <filesystem>
 #include <fstream>
+#include <ios>
+#include <vector>
 
 namespace charta {
 	
@@ -35,6 +37,12 @@ struct BMPInfoHeader {
 
 #pragma pack(pop)
 
+struct BMPImageData {
+	BMPFileHeader file_header;
+	BMPInfoHeader info_header;
+	std::vector<std::uint8_t> data;
+};
+
 struct CanvasManager {
 	// 1. create image and return its uuid
 	// 2. delete image by uuid
@@ -48,12 +56,12 @@ struct CanvasManager {
 	void createNewCanvas(int width, int height, const std::string& filepath);
 	void deleteCanvas(const std::string& filepath);
 
-	void read(std::istream &stream);
-
-	BMPFileHeader file_header;
-    BMPInfoHeader bmp_info_header;
+	BMPImageData readBMPFileFromStream(std::istream &stream);
+	BMPImageData readBMPFileFromFileSystem(const std::string& filename);
 
 private:
+	BMPImageData read(std::istream& binary_stream);
+
 	const std::filesystem::path m_working_folder;
 
 	// static members
