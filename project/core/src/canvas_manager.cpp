@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <cassert>
 // charta
 #include "charta/canvas_manager.h"
 #include "charta/exceptions.h"
@@ -42,12 +43,14 @@ void CanvasManager::createNewCanvas(const int width, const int height, const std
 }
 
 
+
 void CanvasManager::deleteCanvas(const std::string& filename) {
 	std::string filepath = m_working_folder.string() + filename;
 	if(remove(filepath.c_str()) != 0) {
 		throw FileDeletionFailure();
 	}
 }
+
 
 
 void CanvasManager::saveCanvasFragment(const std::string& filename, std::istream& stream, int x_px, int y_px, int w_px, int h_px) {
@@ -78,6 +81,9 @@ void CanvasManager::saveCanvasFragment(const std::string& filename, std::istream
 	const int fragment_bytes_in_row = fragment.info_header.width * bytes_in_px;
 	const int fragment_padding = (4 - fragment_bytes_in_row % 4) % 4;
 	
+	std::cout << "frag width: " << fragment.info_header.width << "; frag height: " << fragment.info_header.height << std::endl;
+	std::cout << "frag padding: " << fragment_padding << std::endl;
+
 	int fragment_x_offset_px = 0;
 	int fragment_y_offset_px = 0;
 	// leftside underflow on X coordinate
@@ -101,18 +107,24 @@ void CanvasManager::saveCanvasFragment(const std::string& filename, std::istream
 		h_px = canvas.info_header.height - y_px;
 	}
 
+	std::cout << fragment_x_offset_px << " " << fragment_y_offset_px << std::endl;
+
 	const int w_bytes = w_px * bytes_in_px;
 
     for (int line_px = h_px; line_px > 0; line_px--) {
+
         const int canvas_pos = (canvas.info_header.height - y_px - line_px) * 
 							   (canvas_bytes_in_row + canvas_padding) + x_px * bytes_in_px;
 
 		const int fragment_pos = (fragment.info_header.height - fragment_y_offset_px - line_px) * 
 								 (fragment_bytes_in_row + fragment_padding) + fragment_x_offset_px * bytes_in_px;
 
+		std::cout << "row: " << h_px - line_px << " " << w_bytes << std::endl;
         for (int i = canvas_pos, j = fragment_pos; i < canvas_pos + w_bytes; i++, j++) {
+			std::cout << j << " ";
 			canvas.data[i] = fragment.data[j];
         }
+		std::cout << std::endl;
     }
 
 	// saving updated file
@@ -120,19 +132,75 @@ void CanvasManager::saveCanvasFragment(const std::string& filename, std::istream
 }
 
 
-void CanvasManager::save(const std::string& filename, BMPImageData& image_data) {
-    const std::string filepath = m_working_folder.string() + filename; 
-	std::ofstream file(filepath, std::ofstream::out | std::ofstream::binary);
+std::vector<std::uint8_t> CanvasManager::getCanvasFragment(const std::string filename, int x_px, int y_px, int w_px, int h_px) {
+	BMPImageData canvas = this->readBMPFileFromFileSystem(filename);
+	
+	const int bytes_in_px = 3;
+    
+	// canvas
+	const int bytes_in_row = canvas.info_header.width * bytes_in_px;
+    const int canvas_padding = (4 - bytes_in_row % 4) % 4;
 
-	if(!file.is_open()) {
-		throw FileOpeningFailure();
+	// fragment
+    const int fragment_padding = (4 - w_px * bytes_in_px % 4) % 4;
+    const int fragment_size_bytes = (w_px * bytes_in_px + fragment_padding) * h_px;
+
+    std::vector<std::uint8_t> fragment_data;
+    fragment_data.reserve(fragment_size_bytes);
+
+    const int w_bytes = w_px * bytes_in_px;
+
+    // if (!(0 <= x_px && x_px < x_px + w_px &&
+    //       x_px + w_px <= bmp_info_header.width) ||
+    //     !(0 <= y_px && y_px < y_px + h_px &&
+    //       y_px + h_px <= bmp_info_header.height)) {
+    //     throw cropping_bounds_exception();
+    // }
+
+	std::cout << x_px << " " << y_px << std::endl;
+
+    for (int line_px = h_px; line_px > 0; line_px--) {
+        const int pos = (canvas.info_header.height - y_px - line_px) *
+                    	(bytes_in_row + canvas_padding) + x_px * bytes_in_px;
+
+        for (int i = pos; i < pos + w_bytes; i++) {
+            fragment_data.push_back(canvas.data[i]);
+        }
+
+        for (int i = 0; i < fragment_padding; i++) {
+            fragment_data.push_back(0);
+        }
+    }
+
+	int size = fragment_data.size() + sizeof(canvas.info_header) + sizeof(canvas.file_header);
+	int canvas_size = canvas.data.size() + sizeof(canvas.file_header) + sizeof(canvas.info_header);
+
+    BMPInfoHeader fragment_info_header = canvas.info_header;
+	BMPFileHeader fragment_file_header = canvas.file_header;
+
+	fragment_info_header.height = h_px;
+    fragment_info_header.width = w_px;
+    fragment_info_header.size_image = static_cast<std::uint32_t>(fragment_data.size());
+
+    fragment_file_header.file_size = sizeof(fragment_info_header) + sizeof(fragment_file_header) +
+                            static_cast<std::uint32_t>(fragment_data.size());
+
+	std::stringstream ss(std::ofstream::in | std::ofstream::out | std::ofstream::binary);
+    ss.write(reinterpret_cast<char *>(&fragment_file_header), sizeof(fragment_file_header));
+    ss.write(reinterpret_cast<char *>(&fragment_info_header), sizeof(fragment_info_header));
+    ss.write(reinterpret_cast<char *>(fragment_data.data()), static_cast<std::streamsize>(fragment_data.size()));
+
+	std::vector<std::uint8_t> result;
+	std::uint8_t byte;
+
+	while(ss >> byte) {
+		result.push_back(byte);
 	}
-
-    file.write(reinterpret_cast<char*>(&image_data.file_header), sizeof(image_data.file_header));
-    file.write(reinterpret_cast<char*>(&image_data.info_header), sizeof(image_data.info_header));
-    file.write(reinterpret_cast<char*>(image_data.data.data()), static_cast<std::streamsize>(image_data.data.size()));
+	
+	std::cout << "canvas size: " << canvas_size << std::endl;
+	std::cout << size << " " << result.size() << std::endl;
+	return result;
 }
-
 
 
 BMPImageData CanvasManager::readBMPFileFromFileSystem(const std::string& filename) {
@@ -147,6 +215,7 @@ BMPImageData CanvasManager::readBMPFileFromFileSystem(const std::string& filenam
 }
 
 
+
 BMPImageData CanvasManager::readBMPFileFromStream(std::istream &stream) {
 	// file header
 	std::stringstream binary_sstream(std::stringstream::in | std::stringstream::out | std::stringstream::binary);
@@ -157,6 +226,7 @@ BMPImageData CanvasManager::readBMPFileFromStream(std::istream &stream) {
 	}
 	return this->read(binary_sstream);
 }
+
 
 
 BMPImageData CanvasManager::read(std::istream& binary_stream) {
@@ -190,6 +260,21 @@ BMPImageData CanvasManager::read(std::istream& binary_stream) {
 	binary_stream.read(reinterpret_cast<char*>(data.data()), static_cast<std::streamsize>(data.size()));
 
 	return BMPImageData{ file_header, bmp_info_header, data };
+}
+
+
+
+void CanvasManager::save(const std::string& filename, BMPImageData& image_data) {
+    const std::string filepath = m_working_folder.string() + filename; 
+	std::ofstream file(filepath, std::ofstream::out | std::ofstream::binary);
+
+	if(!file.is_open()) {
+		throw FileOpeningFailure();
+	}
+
+    file.write(reinterpret_cast<char*>(&image_data.file_header), sizeof(image_data.file_header));
+    file.write(reinterpret_cast<char*>(&image_data.info_header), sizeof(image_data.info_header));
+    file.write(reinterpret_cast<char*>(image_data.data.data()), static_cast<std::streamsize>(image_data.data.size()));
 }
 
 
